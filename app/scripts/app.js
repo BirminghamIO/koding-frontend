@@ -12,6 +12,14 @@ angular.module('frontendApp', [
         templateUrl: 'views/main.html',
         controller: 'MainCtrl'
       })
+      .when('/login', {
+        templateUrl: 'views/login.html',
+        controller: 'MainCtrl'
+      })
+      .when('/register', {
+        templateUrl: 'views/register.html',
+        controller: 'MainCtrl'
+      })
       .otherwise({
         redirectTo: '/'
       });

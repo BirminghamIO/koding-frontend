@@ -146,13 +146,15 @@ body {
     right: 0;
     background: #fff;
     color: #fff;
-}
-
-#compass p {
-    color: #fff;
+    border-left: 4px solid black;
+    border-top: 4px solid black;
 }
 
 #matrix {
     width: 100%;
     height: 100%;
+    position: absolute;
+    z-index: 0;
+    top: 0;
+    left: 0;
 }
