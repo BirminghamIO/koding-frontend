@@ -1,0 +1,216 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		 <link rel="stylesheet" type="text/css" href="style.css">
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC-JYoG_E3lFI88YEV18FcU0nR2dzp1bBE"></script>
+		<script src="jquery.cookie.js"></script>
+	</head>
+	<body onload="loadLocation()">
+		<div id="map"></div>
+		<div id="status">
+			<div id="placeholder"></div>
+		</div>
+		<div id="nav">
+			<h1>Header 1</h1>
+			<h2>Header 2</h2>
+			<h3>Header 3</h3>
+			<h4>Header 4</h4>
+		</div>
+		<canvas id="compass">
+			<p>Heading: NNW</p>
+		</canvas>
+		<script type="text/javascript">
+			function mapInitialize() {
+				var map;
+
+				var style = [
+					{
+					stylers: [
+						{ saturation: "-100" },
+						{ lightness: "20" }
+					]
+					},{
+					featureType: "poi",
+					stylers: [
+						{ visibility: "off" }
+					]
+					},{
+					featureType: "transit",
+					stylers: [
+						{ visibility: "off" }
+					]
+					},{
+					featureType: "road",
+					stylers: [
+						{ lightness: "50" },
+						{ visibility: "on" }
+					]
+					},{
+					featureType: "landscape",
+					stylers: [
+						{ lightness: "50" }
+					]
+					}
+				]
+
+				var options = {
+					zoom: 17,
+					center:  new google.maps.LatLng(52.481305, -1.898620),
+					mapTypeId: google.maps.MapTypeId.ROADMAP,
+					disableDefaultUI: true
+				};
+				
+				map = new google.maps.Map($('#map')[0], options);
+				map.setOptions({
+					styles: style
+				});
+				
+				var marker = new google.maps.Marker({
+					position: map.getCenter(),
+					map: map,
+					title: 'Click to zoom'
+				});
+
+			}
+
+			matrixCompass = function() {
+				var c = document.getElementById("compass");
+				var ctx = c.getContext("2d");
+
+				//making the canvas full screen
+				c.height = 300;
+				c.width = 400;
+
+				//chinese characters - taken from the unicode charset
+				var chinese = "田由甲申甴电甶男甸甹町画甼甽甾甿畀畁畂畃畄畅畆畇畈畉畊畋界畍畎畏畐畑";
+				//converting the string into an array of single characters
+				chinese = chinese.split("");
+
+				var font_size = 10;
+				var columns = c.width/font_size; //number of columns for the rain
+				//an array of drops - one per column
+				var drops = [];
+				//x below is the x coordinate
+				//1 = y co-ordinate of the drop(same for every drop initially)
+				for(var x = 0; x < columns; x++)
+					drops[x] = 1; 
+
+				//drawing the characters
+				function draw()
+				{
+					//Black BG for the canvas
+					//translucent BG to show trail
+					ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+					ctx.fillRect(0, 0, c.width, c.height);
+					
+					ctx.fillStyle = "#0F0"; //green text
+					ctx.font = font_size + "px arial";
+					//looping over drops
+					for(var i = 0; i < drops.length; i++)
+					{
+						//a random chinese character to print
+						var text = chinese[Math.floor(Math.random()*chinese.length)];
+						//x = i*font_size, y = value of drops[i]*font_size
+						ctx.fillText(text, i*font_size, drops[i]*font_size);
+						
+						//sending the drop back to the top randomly after it has crossed the screen
+						//adding a randomness to the reset to make the drops scattered on the Y axis
+						if(drops[i]*font_size > c.height && Math.random() > 0.975)
+							drops[i] = 0;
+						
+						//incrementing Y coordinate
+						drops[i]++;
+					}
+				}
+
+				setInterval(draw, 33);
+			}
+
+			google.maps.event.addDomListener(window, 'load', mapInitialize);
+
+			// Render Matrix code
+			matrixCompass();
+		</script>
+		<script type="text/javascript">
+					
+			var latitude;
+			var longitude;
+			var accuracy;
+			
+			function loadLocation() {
+			
+				if(navigator.geolocation) {
+					document.getElementById("status").innerHTML = "HTML5 Geolocation is supported in your browser.";
+					document.getElementById("status").style.color = "#1ABC3C";
+					
+					if($.cookie("posLat")) {
+						latitude = $.cookie("posLat");
+						longitude = $.cookie("posLon");
+						accuracy = $.cookie("posAccuracy");
+						document.getElementById("status").innerHTML = "Location data retrieved from cookies. <a id=\"clear_cookies\" href=\" javascript:clear_cookies();\" style=\"cursor:pointer; margin-left: 15px;\"> clear cookies</a>";
+						updateDisplay();
+						
+					} else {
+						navigator.geolocation.getCurrentPosition(
+											success_handler, 
+											error_handler, 
+											{timeout:10000});
+					}
+				}
+			}
+
+			function success_handler(position) {
+				latitude = position.coords.latitude;
+				longitude = position.coords.longitude;
+				accuracy = position.coords.accuracy;
+				
+				if (!latitude || !longitude) {
+					document.getElementById("status").innerHTML = "HTML5 Geolocation supported, but location data is currently unavailable.";
+					return;
+				}
+				
+				updateDisplay();
+				
+				$.cookie("posLat", latitude);
+				$.cookie("posLon", longitude);
+				$.cookie("posAccuracy", accuracy);
+			  
+			}
+			
+			function updateDisplay() {
+				document.getElementById("status").innerHTML = "HTML5 Geolocation is supported in your browser. " + latitude + ', ' + longitude;
+			}
+			
+			
+			function error_handler(error) {
+				var locationError = '';
+				
+				switch(error.code){
+				case 0:
+					locationError = "There was an error while retrieving your location: " + error.message;
+					break;
+				case 1:
+					locationError = "The user prevented this page from retrieving a location.";
+					break;
+				case 2:
+					locationError = "The browser was unable to determine your location: " + error.message;
+					break;
+				case 3:
+					locationError = "The browser timed out before retrieving the location.";
+					break;
+				}
+
+				document.getElementById("status").innerHTML = locationError;
+				document.getElementById("status").style.color = "#D03C02";
+			}
+			
+			function clear_cookies() {
+				$.cookie('posLat', null);
+				document.getElementById("status").innerHTML = "Cookies cleared.";
+			}
+			
+		   
+		</script>
+	</body>
+</html>
